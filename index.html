@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Gizli Dil Sistemi</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+color:white;
+overflow-x:hidden;
+background: radial-gradient(circle at top,#1a0033,#0f0c29,#000);
+transition:0.5s;
+}
+
+/* ===================== */
+/* 🌗 DARK / LIGHT MODE */
+/* ===================== */
+body.light{
+background: linear-gradient(135deg,#e0e0e0,#ffffff);
+color:black;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+/* ===================== */
+/* 🔐 LOGIN SCREEN */
+/* ===================== */
+#loginScreen{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:rgba(0,0,0,0.9);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.login-box{
+background:rgba(255,255,255,0.1);
+padding:30px;
+border-radius:15px;
+text-align:center;
+backdrop-filter:blur(10px);
+}
+
+.login-box input{
+padding:10px;
+border:none;
+border-radius:8px;
+margin-top:10px;
+}
+
+.login-box button{
+margin-top:10px;
+padding:10px 20px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* ===================== */
+/* 🏷️ TITLE */
+/* ===================== */
+h1{
+text-align:center;
+margin-top:20px;
+font-size:34px;
+text-shadow:0 0 15px #ff00cc;
+}
+
+/* ===================== */
+/* NAV */
+/* ===================== */
+nav{
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
+margin:20px 0;
+}
+
+button{
+padding:12px 18px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+background:linear-gradient(45deg,#ff00cc,#3333ff);
+color:white;
+font-weight:bold;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.1);
+}
+
+/* ===================== */
+/* CARD */
+/* ===================== */
+.card{
+background:rgba(255,255,255,0.08);
+padding:20px;
+border-radius:15px;
+backdrop-filter:blur(10px);
+}
+
+textarea{
+width:100%;
+height:120px;
+border-radius:10px;
+border:none;
+padding:10px;
+background:rgba(0,0,0,0.4);
+color:white;
+}
+
+/* ===================== */
+/* ALFA */
+/* ===================== */
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+gap:10px;
+}
+
+.box{
+background:rgba(255,255,255,0.1);
+padding:10px;
+border-radius:10px;
+text-align:center;
+}
+
+/* ===================== */
+/* MOBILE MODE */
+/* ===================== */
+.mobile .container{
+max-width:420px;
+}
+
+.mobile nav{
+flex-direction:column;
+}
+
+/* ===================== */
+/* SECTION */
+/* ===================== */
+.section{display:none;}
+.active{display:block;}
+
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>Giriş Yap</h2>
+    <input type="password" id="pass" placeholder="Şifre">
+    <br>
+    <button onclick="login()">Giriş</button>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+
+<div class="container">
+
+<h1>🔐 Gizli Dil Sistemi</h1>
+
+<!-- NAV -->
+<nav>
+<button onclick="show('home')">Ana</button>
+<button onclick="show('translate')">Çeviri</button>
+<button onclick="show('alpha')">Alfabe</button>
+<button onclick="toggleTheme()">🌗 Tema</button>
+<button onclick="toggleMobile()">📱 Mobil</button>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="section active">
+<h2>Hoş Geldin</h2>
+<p>Gizli dil sistemi aktif</p>
+</div>
+
+<!-- TRANSLATE -->
+<div id="translate" class="section">
+<div class="card">
+<h2>Çeviri</h2>
+<textarea id="input"></textarea>
+<div id="output"></div>
+</div>
+</div>
+
+<!-- ALPHA -->
+<div id="alpha" class="section">
+<div class="card">
+<div id="alphabet"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+/* 🔐 LOGIN */
+function login(){
+let p=document.getElementById("pass").value;
+if(p==="1234"){
+document.getElementById("loginScreen").style.display="none";
+document.getElementById("app").style.display="block";
+}else{
+alert("Hatalı şifre");
+}
+}
+
+/* 🌗 THEME */
+function toggleTheme(){
+document.body.classList.toggle("light");
+}
+
+/* 📱 MOBILE */
+function toggleMobile(){
+document.body.classList.toggle("mobile");
+}
+
+/* NAV */
+function show(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+/* 🔤 MAP */
+const map = {
+A:"u",E:"o",I:"a",İ:"e",O:"i",Ö:"ö",U:"ü",Ü:"ı",
+B:"d",C:"ş",Ç:"t",D:"k",F:"v",G:"b",Ğ:"",
+H:"h",J:"y",K:"g",L:"r",M:"n",N:"m",
+P:"p",R:"l",S:"z",Ş:"s",T:"ç",V:"f",Y:"c",Z:"j"
+};
+
+/* 🔄 TRANSLATE */
+document.getElementById("input").addEventListener("input",(e)=>{
+let t=e.target.value.toUpperCase().split("").map(c=>map[c]??c).join("");
+document.getElementById("output").innerText=t;
+
+/* 💾 SAVE */
+localStorage.setItem("lastText",e.target.value);
+});
+
+/* 💾 LOAD */
+window.onload=()=>{
+let last=localStorage.getItem("lastText");
+if(last){
+document.getElementById("input").value=last;
+}
+};
+
+/* ALPHABET */
+const box=document.getElementById("alphabet");
+for(let k in map){
+let d=document.createElement("div");
+d.className="box";
+d.innerText=`${k} → ${map[k]}`;
+box.appendChild(d);
+}
+
+</script>
+
+</body>
+</html>
