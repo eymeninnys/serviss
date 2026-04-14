@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Gizli Dil Sistemi</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+color:white;
+overflow-x:hidden;
+background: radial-gradient(circle at top,#1a0033,#0f0c29,#000);
+transition:0.5s;
+}
+
+body.light{
+background: linear-gradient(135deg,#e0e0e0,#ffffff);
+color:black;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+/* LOGIN */
+#loginScreen{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:rgba(0,0,0,0.9);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.login-box{
+background:rgba(255,255,255,0.1);
+padding:30px;
+border-radius:15px;
+text-align:center;
+backdrop-filter:blur(10px);
+}
+
+.login-box input{
+padding:10px;
+border:none;
+border-radius:8px;
+margin-top:10px;
+}
+
+/* NAV */
+nav{
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
+margin:20px 0;
+}
+
+button{
+padding:12px 18px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+background:linear-gradient(45deg,#ff00cc,#3333ff);
+color:white;
+font-weight:bold;
+}
+
+.section{display:none;}
+.active{display:block;}
+</style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>Giriş Yap</h2>
+    <input type="text" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Şifre">
+    <br>
+    <button onclick="login()">Giriş</button>
+    <button onclick="register()">Kayıt Ol</button>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+
+<div class="container">
+
+<h1>🔐 Gizli Dil Sistemi</h1>
+
+<nav>
+<button onclick="show('home')">Ana</button>
+<button onclick="show('translate')">Çeviri</button>
+<button onclick="show('alpha')">Alfabe</button>
+<button onclick="toggleTheme()">🌗 Tema</button>
+<button onclick="toggleMobile()">📱 Mobil</button>
+<button onclick="logout()">🚪 Çıkış</button>
+</nav>
+
+<div id="home" class="section active">
+<h2>Hoş Geldin</h2>
+</div>
+
+<div id="translate" class="section">
+<textarea id="input"></textarea>
+<div id="output"></div>
+</div>
+
+<div id="alpha" class="section">
+<div id="alphabet"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+// UI JS (senin kodun)
+function toggleTheme(){document.body.classList.toggle("light");}
+function toggleMobile(){document.body.classList.toggle("mobile");}
+
+function show(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+const map = {
+A:"u",E:"o",I:"a",İ:"e",O:"i",Ö:"ö",U:"ü",Ü:"ı",
+B:"d",C:"ş",Ç:"t",D:"k",F:"v",G:"b",Ğ:"",
+H:"h",J:"y",K:"g",L:"r",M:"n",N:"m",
+P:"p",R:"l",S:"z",Ş:"s",T:"ç",V:"f",Y:"c",Z:"j"
+};
+
+document.getElementById("input").addEventListener("input",(e)=>{
+let t=e.target.value.toUpperCase().split("").map(c=>map[c]??c).join("");
+document.getElementById("output").innerText=t;
+});
+
+const box=document.getElementById("alphabet");
+for(let k in map){
+let d=document.createElement("div");
+d.innerText=`${k} → ${map[k]}`;
+box.appendChild(d);
+}
+</script>
+
+<!-- 🔥 FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCA5gGIRMDs67LUZ1QrgS7GMNlxC44LsbE",
+  authDomain: "servicess-59f58.firebaseapp.com",
+  projectId: "servicess-59f58",
+  storageBucket: "servicess-59f58.firebasestorage.app",
+  messagingSenderId: "898248019243",
+  appId: "1:898248019243:web:f57d0190e89df6b68ac96e",
+  measurementId: "G-JY31MMGNB1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.register = function(){
+let email=document.getElementById("email").value;
+let pass=document.getElementById("password").value;
+
+createUserWithEmailAndPassword(auth,email,pass)
+.then(()=>alert("Kayıt başarılı"))
+.catch(e=>alert(e.message));
+}
+
+window.login = function(){
+let email=document.getElementById("email").value;
+let pass=document.getElementById("password").value;
+
+signInWithEmailAndPassword(auth,email,pass)
+.catch(e=>alert(e.message));
+}
+
+window.logout = function(){
+signOut(auth);
+}
+
+onAuthStateChanged(auth,(user)=>{
+if(user){
+document.getElementById("loginScreen").style.display="none";
+document.getElementById("app").style.display="block";
+}else{
+document.getElementById("loginScreen").style.display="flex";
+document.getElementById("app").style.display="none";
+}
+});
+</script>
+
+</body>
+</html>
