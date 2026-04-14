@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Real Online Chat PRO</title>
+<title>Chat PRO Mobile FIX</title>
 
 <style>
 body{
@@ -24,17 +24,18 @@ z-index:9999;
 
 .login-box{
 background:rgba(255,255,255,0.1);
-padding:25px;
+padding:20px;
 border-radius:15px;
 text-align:center;
 }
 
-input,textarea{
-padding:10px;
-margin:5px;
-border:none;
-border-radius:8px;
+input{
+display:block;
 width:90%;
+margin:10px auto;
+padding:10px;
+border-radius:8px;
+border:none;
 }
 
 button{
@@ -43,28 +44,21 @@ border:none;
 border-radius:10px;
 background:linear-gradient(45deg,#ff00cc,#3333ff);
 color:white;
-cursor:pointer;
-margin:3px;
+width:90%;
+margin:5px;
 }
 
 .container{
-max-width:1100px;
+max-width:1000px;
 margin:auto;
-padding:20px;
-}
-
-.main{
-display:grid;
-grid-template-columns:1fr 2fr 1fr;
-gap:10px;
+padding:15px;
 }
 
 .panel{
 background:rgba(255,255,255,0.08);
 padding:10px;
 border-radius:10px;
-height:80vh;
-overflow:auto;
+margin-top:10px;
 }
 
 .msg{
@@ -83,10 +77,13 @@ border-radius:8px;
 <div id="loginScreen">
 <div class="login-box">
 <h2>Giriş</h2>
+
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Şifre">
-<button onclick="login()">Giriş</button>
-<button onclick="register()">Kayıt</button>
+
+<button onclick="login()">GİRİŞ</button>
+<button onclick="register()">KAYIT</button>
+
 </div>
 </div>
 
@@ -94,64 +91,28 @@ border-radius:8px;
 <div id="app" style="display:none;">
 <div class="container">
 
-<h2>💬 REAL ONLINE CHAT</h2>
+<h2>💬 MOBILE CHAT FIX</h2>
 <button onclick="logout()">Çıkış</button>
 
-<div class="main">
-
-<!-- USERS -->
-<div class="panel">
-<h3>Kullanıcılar</h3>
-<div id="users"></div>
-</div>
-
-<!-- CHAT -->
 <div class="panel">
 <h3>Chat</h3>
 <div id="messages"></div>
 
-<textarea id="msgInput"></textarea>
+<input id="msgInput" placeholder="Mesaj...">
 <button onclick="sendMessage()">Gönder</button>
 </div>
 
-<!-- STATUS -->
-<div class="panel">
-<h3>Online System</h3>
-<div id="statusBox"></div>
-</div>
-
-</div>
-
 </div>
 </div>
 
-<script type="module">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-getAuth,
-createUserWithEmailAndPassword,
-signInWithEmailAndPassword,
-signOut,
-onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-getFirestore,
-collection,
-addDoc,
-query,
-orderBy,
-onSnapshot,
-serverTimestamp,
-doc,
-setDoc,
-onDisconnect
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<script>
 /* FIREBASE */
 const firebaseConfig = {
-  apiKey: "AIzaSyCACA5gIRMDs67LUZ1QRG7GMNlxC44LsbE",
+  apiKey: "AIzaSyCA5gGIRMDs67LUZ1QrgS7GMNlxC44LsbE",
   authDomain: "servicess-59f58.firebaseapp.com",
   projectId: "servicess-59f58",
   storageBucket: "servicess-59f58.firebasestorage.app",
@@ -159,123 +120,80 @@ const firebaseConfig = {
   appId: "1:898248019243:web:f57d0190e89df6b68ac96e"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 let currentUser=null;
 
 /* LOGIN */
-window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
-window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
-window.logout=()=>signOut(auth);
+function login(){
+let email=document.getElementById("email").value;
+let pass=document.getElementById("password").value;
 
-/* REAL ONLINE SYSTEM */
-function goOnline(user){
-
-const ref = doc(db,"status",user.uid);
-
-/* online */
-setDoc(ref,{
-email:user.email,
-lastSeen:Date.now(),
-state:"online"
-});
-
-/* offline when close */
-onDisconnect(ref).set({
-email:user.email,
-lastSeen:Date.now(),
-state:"offline"
-});
+auth.signInWithEmailAndPassword(email,pass)
+.catch(e=>alert(e.message));
 }
 
-/* HEARTBEAT */
-setInterval(()=>{
-if(currentUser){
-setDoc(doc(db,"status",currentUser.uid),{
-email:currentUser.email,
-lastSeen:Date.now(),
-state:"online"
-});
-}
-},10000);
+/* REGISTER */
+function register(){
+let email=document.getElementById("email").value;
+let pass=document.getElementById("password").value;
 
-/* AUTH */
-onAuthStateChanged(auth,(user)=>{
+auth.createUserWithEmailAndPassword(email,pass)
+.catch(e=>alert(e.message));
+}
+
+/* LOGOUT */
+function logout(){
+auth.signOut();
+}
+
+/* AUTH FIX */
+auth.onAuthStateChanged(user=>{
 if(user){
 currentUser=user;
-loginScreen.style.display="none";
-app.style.display="block";
-
-goOnline(user);
-loadAll();
-
+document.getElementById("loginScreen").style.display="none";
+document.getElementById("app").style.display="block";
+loadChat();
 }else{
-loginScreen.style.display="flex";
-app.style.display="none";
+document.getElementById("loginScreen").style.display="flex";
+document.getElementById("app").style.display="none";
 }
 });
 
-/* CHAT */
-window.sendMessage=async()=>{
-if(!msgInput.value) return;
+/* SEND MSG */
+function sendMessage(){
+let msg=document.getElementById("msgInput").value;
+if(!msg) return;
 
-await addDoc(collection(db,"messages"),{
-text:msgInput.value,
+db.collection("messages").add({
+text:msg,
 user:currentUser.email,
-time:serverTimestamp()
+time:Date.now()
 });
 
-msgInput.value="";
+document.getElementById("msgInput").value="";
 }
 
 /* LOAD CHAT */
 function loadChat(){
-const q=query(collection(db,"messages"),orderBy("time"));
+db.collection("messages")
+.orderBy("time")
+.onSnapshot(snap=>{
+let box=document.getElementById("messages");
+box.innerHTML="";
 
-onSnapshot(q,(snap)=>{
-messages.innerHTML="";
-
-snap.forEach(d=>{
-let data=d.data();
-
-messages.innerHTML+=`
+snap.forEach(doc=>{
+let d=doc.data();
+box.innerHTML+=`
 <div class="msg">
-<b>${data.user}</b><br>${data.text}
+<b>${d.user}</b><br>${d.text}
 </div>`;
 });
 });
 }
-
-/* USERS */
-function loadUsers(){
-onSnapshot(collection(db,"status"),(snap)=>{
-users.innerHTML="";
-statusBox.innerHTML="";
-
-snap.forEach(d=>{
-let u=d.data();
-
-let online = (Date.now()-u.lastSeen)<15000;
-
-users.innerHTML+=`
-<div>${online?"🟢":"🔴"} ${u.email}</div>
-`;
-
-statusBox.innerHTML+=`
-<div>${u.email} - ${u.state}</div>
-`;
-});
-});
-}
-
-/* INIT */
-function loadAll(){
-loadChat();
-loadUsers();
-}
-
 </script>
 
 </body>
