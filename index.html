@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Chat PRO Mobile FIX</title>
+<title>UNIVERSAL CHAT PRO</title>
 
 <style>
 body{
@@ -12,17 +12,15 @@ background:radial-gradient(circle,#1a0033,#000);
 color:white;
 }
 
-#loginScreen{
-position:fixed;
-inset:0;
+#login{
+position:fixed;inset:0;
 background:black;
 display:flex;
 justify-content:center;
 align-items:center;
-z-index:9999;
 }
 
-.login-box{
+.box{
 background:rgba(255,255,255,0.1);
 padding:20px;
 border-radius:15px;
@@ -30,41 +28,42 @@ text-align:center;
 }
 
 input{
-display:block;
 width:90%;
-margin:10px auto;
 padding:10px;
+margin:5px;
 border-radius:8px;
 border:none;
 }
 
 button{
+width:90%;
 padding:10px;
+margin:5px;
 border:none;
 border-radius:10px;
 background:linear-gradient(45deg,#ff00cc,#3333ff);
 color:white;
-width:90%;
-margin:5px;
 }
 
-.container{
-max-width:1000px;
+#app{
+display:none;
+max-width:900px;
 margin:auto;
-padding:15px;
+padding:20px;
 }
 
-.panel{
-background:rgba(255,255,255,0.08);
+#chat{
+height:400px;
+overflow:auto;
+background:rgba(0,0,0,0.3);
 padding:10px;
 border-radius:10px;
-margin-top:10px;
 }
 
 .msg{
-background:rgba(0,0,0,0.3);
+margin:5px 0;
 padding:5px;
-margin:5px;
+background:rgba(255,255,255,0.1);
 border-radius:8px;
 }
 
@@ -73,46 +72,37 @@ border-radius:8px;
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen">
-<div class="login-box">
+<div id="login">
+<div class="box">
 <h2>Giriş</h2>
-
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Şifre">
-
-<button onclick="login()">GİRİŞ</button>
-<button onclick="register()">KAYIT</button>
-
+<button onclick="login()">Giriş</button>
+<button onclick="register()">Kayıt</button>
 </div>
 </div>
 
-<!-- APP -->
-<div id="app" style="display:none;">
-<div class="container">
+<div id="app">
 
-<h2>💬 MOBILE CHAT FIX</h2>
+<h2>💬 UNIVERSAL CHAT</h2>
 <button onclick="logout()">Çıkış</button>
 
-<div class="panel">
-<h3>Chat</h3>
-<div id="messages"></div>
+<div id="chat"></div>
 
-<input id="msgInput" placeholder="Mesaj...">
-<button onclick="sendMessage()">Gönder</button>
-</div>
+<input id="msg" placeholder="Mesaj yaz">
+<button onclick="send()">Gönder</button>
 
 </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
+
 /* FIREBASE */
 const firebaseConfig = {
-  apiKey: "AIzaSyCA5gGIRMDs67LUZ1QrgS7GMNlxC44LsbE",
+  apiKey: "AIzaSyCA5gGIRMDs67LUZ1QRG7GMNlxC44LsbE",
   authDomain: "servicess-59f58.firebaseapp.com",
   projectId: "servicess-59f58",
   storageBucket: "servicess-59f58.firebasestorage.app",
@@ -125,64 +115,53 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser=null;
-
 /* LOGIN */
 function login(){
-let email=document.getElementById("email").value;
-let pass=document.getElementById("password").value;
-
-auth.signInWithEmailAndPassword(email,pass)
+auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(e=>alert(e.message));
 }
 
-/* REGISTER */
 function register(){
-let email=document.getElementById("email").value;
-let pass=document.getElementById("password").value;
-
-auth.createUserWithEmailAndPassword(email,pass)
+auth.createUserWithEmailAndPassword(email.value,password.value)
 .catch(e=>alert(e.message));
 }
 
-/* LOGOUT */
 function logout(){
 auth.signOut();
 }
 
-/* AUTH FIX */
+/* AUTH */
 auth.onAuthStateChanged(user=>{
 if(user){
-currentUser=user;
-document.getElementById("loginScreen").style.display="none";
+document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="block";
 loadChat();
 }else{
-document.getElementById("loginScreen").style.display="flex";
+document.getElementById("login").style.display="flex";
 document.getElementById("app").style.display="none";
 }
 });
 
-/* SEND MSG */
-function sendMessage(){
-let msg=document.getElementById("msgInput").value;
+/* SEND */
+function send(){
+let msg=document.getElementById("msg").value;
 if(!msg) return;
 
 db.collection("messages").add({
 text:msg,
-user:currentUser.email,
+user:auth.currentUser.email,
 time:Date.now()
 });
 
-document.getElementById("msgInput").value="";
+document.getElementById("msg").value="";
 }
 
-/* LOAD CHAT */
+/* LOAD */
 function loadChat(){
 db.collection("messages")
 .orderBy("time")
 .onSnapshot(snap=>{
-let box=document.getElementById("messages");
+let box=document.getElementById("chat");
 box.innerHTML="";
 
 snap.forEach(doc=>{
@@ -194,6 +173,7 @@ box.innerHTML+=`
 });
 });
 }
+
 </script>
 
 </body>
