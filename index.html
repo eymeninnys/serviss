@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Gizli Sistem CHAT PRO</title>
+<title>Mini Discord PRO</title>
 
 <style>
 body{
@@ -12,15 +12,10 @@ background:radial-gradient(circle,#1a0033,#000);
 color:white;
 }
 
-.container{
-max-width:1100px;
-margin:auto;
-padding:20px;
-}
+.container{max-width:1100px;margin:auto;padding:20px;}
 
 #loginScreen{
-position:fixed;
-inset:0;
+position:fixed;inset:0;
 background:black;
 display:flex;
 justify-content:center;
@@ -55,7 +50,7 @@ margin:3px;
 
 .main{
 display:grid;
-grid-template-columns:1fr 2fr;
+grid-template-columns:1fr 2fr 1fr;
 gap:10px;
 }
 
@@ -74,10 +69,7 @@ margin:5px;
 border-radius:8px;
 }
 
-.small{
-font-size:12px;
-opacity:0.7;
-}
+.small{font-size:12px;opacity:0.7;}
 
 </style>
 </head>
@@ -99,36 +91,40 @@ opacity:0.7;
 <div id="app" style="display:none;">
 <div class="container">
 
-<h2>💬 MINI DISCORD SYSTEM</h2>
-
+<h2>💬 MINI DISCORD PRO</h2>
 <button onclick="logout()">Çıkış</button>
 
 <div class="main">
 
-<!-- USER PANEL -->
+<!-- USERS -->
 <div class="panel">
 <h3>Kullanıcılar</h3>
 <div id="users"></div>
 </div>
 
-<!-- CHAT PANEL -->
+<!-- CHAT -->
 <div class="panel">
 <h3>Genel Chat</h3>
 <div id="messages"></div>
 
-<textarea id="msgInput" placeholder="Mesaj yaz"></textarea>
+<textarea id="msgInput"></textarea>
 <button onclick="sendMessage()">Gönder</button>
 
 <h3>DM</h3>
-<input id="dmUser" placeholder="Kime (email)">
+<input id="dmUser" placeholder="Email">
 <textarea id="dmText"></textarea>
-<button onclick="sendDM()">DM Gönder</button>
+<button onclick="sendDM()">DM</button>
 
 <div id="dmBox"></div>
 </div>
 
+<!-- ADMIN -->
+<div class="panel" id="adminPanel" style="display:none;">
+<h3>👑 Admin</h3>
+<div id="adminUsers"></div>
 </div>
 
+</div>
 </div>
 </div>
 
@@ -151,8 +147,9 @@ query,
 orderBy,
 onSnapshot,
 serverTimestamp,
-deleteDoc,
-doc
+doc,
+setDoc,
+deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -164,12 +161,9 @@ const firebaseConfig = {
   appId: "1:898248019243:web:f57d0190e89df6b68ac96e"
 };
 
-const appFirebase = initializeApp(firebaseConfig);
-const auth = getAuth(appFirebase);
-const db = getFirestore(appFirebase);
-
-const loginScreen = document.getElementById("loginScreen");
-const appDiv = document.getElementById("app");
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 let currentUser=null;
 
@@ -178,20 +172,39 @@ window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
 window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
 window.logout=()=>signOut(auth);
 
+/* ONLINE SYSTEM */
+function setOnline(user){
+setDoc(doc(db,"status",user.uid),{
+email:user.email,
+last:Date.now()
+});
+}
+
+function isOnline(last){
+return (Date.now()-last)<30000;
+}
+
 /* AUTH */
 onAuthStateChanged(auth,(user)=>{
 if(user){
 currentUser=user;
 loginScreen.style.display="none";
-appDiv.style.display="block";
+app.style.display="block";
+
+setOnline(user);
 loadAll();
+
+if(user.email==="admin@gmail.com"){
+document.getElementById("adminPanel").style.display="block";
+}
+
 }else{
 loginScreen.style.display="flex";
-appDiv.style.display="none";
+app.style.display="none";
 }
 });
 
-/* SEND MSG */
+/* CHAT */
 window.sendMessage=async()=>{
 await addDoc(collection(db,"messages"),{
 text:msgInput.value,
@@ -210,41 +223,57 @@ messages.innerHTML="";
 snap.forEach(d=>{
 let data=d.data();
 
-let div=document.createElement("div");
-div.className="msg";
-div.innerHTML=`
-<b>${data.user}</b><br>
-${data.text}<br>
-<button onclick="deleteMsg('${d.id}','${data.user}')">Sil</button>
-`;
-
-messages.appendChild(div);
+messages.innerHTML+=`
+<div class="msg">
+<b>${data.user}</b><br>${data.text}
+</div>`;
 });
 });
 }
 
-/* DELETE MSG */
-window.deleteMsg=async(id,user)=>{
-if(user!==currentUser.email) return;
-await deleteDoc(doc(db,"messages",id));
-}
-
-/* USERS (fake online) */
+/* USERS */
 function loadUsers(){
-const q=query(collection(db,"messages"),orderBy("time"));
-
-onSnapshot(q,(snap)=>{
-let set=new Set();
-snap.forEach(d=>set.add(d.data().user));
-
+onSnapshot(collection(db,"status"),(snap)=>{
 users.innerHTML="";
-set.forEach(u=>{
-users.innerHTML+=`<div>🟢 ${u}</div>`;
+adminUsers.innerHTML="";
+
+snap.forEach(d=>{
+let data=d.data();
+let online=isOnline(data.last);
+
+users.innerHTML+=`<div>${online?"🟢":"🔴"} ${data.email}</div>`;
+
+adminUsers.innerHTML+=`
+<div>
+${data.email}
+<button onclick="ban('${d.id}')">BAN</button>
+</div>`;
 });
 });
 }
 
-/* INIT */
+/* BAN */
+window.ban=async(id)=>{
+await deleteDoc(doc(db,"status",id));
+}
+
+/* DM (basit) */
+window.sendDM=async()=>{
+await addDoc(collection(db,"messages"),{
+text:"[DM] "+dmText.value+" -> "+dmUser.value,
+user:currentUser.email,
+time:serverTimestamp()
+});
+}
+
+/* HEARTBEAT */
+setInterval(()=>{
+if(currentUser){
+setOnline(currentUser);
+}
+},20000);
+
+/* LOAD ALL */
 function loadAll(){
 loadChat();
 loadUsers();
