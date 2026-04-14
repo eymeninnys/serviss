@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Gizli Dil Sistemi PRO</title>
+<title>Gizli Dil + Chat PRO</title>
 
 <style>
 body{
@@ -10,7 +10,6 @@ margin:0;
 font-family:Arial;
 background:radial-gradient(circle,#1a0033,#000);
 color:white;
-transition:0.4s;
 }
 
 body.light{
@@ -24,7 +23,7 @@ margin:auto;
 padding:20px;
 }
 
-/* 🔐 LOGIN */
+/* LOGIN */
 #loginScreen{
 position:fixed;
 inset:0;
@@ -47,8 +46,8 @@ backdrop-filter:blur(10px);
 display:block;
 margin:10px auto;
 padding:10px;
-border-radius:8px;
 border:none;
+border-radius:8px;
 width:200px;
 }
 
@@ -69,12 +68,13 @@ cursor:pointer;
 background:linear-gradient(45deg,#ff00cc,#3333ff);
 color:white;
 font-weight:bold;
-transition:0.2s;
 }
 
-button:hover{
-transform:scale(1.08);
-}
+button:hover{transform:scale(1.05);}
+
+/* SECTIONS */
+.section{display:none;}
+.active{display:block;}
 
 /* CARD */
 .card{
@@ -84,29 +84,13 @@ border-radius:15px;
 margin-top:10px;
 }
 
-/* GRID */
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(80px,1fr));
-gap:8px;
-}
-
-.box{
-background:rgba(255,255,255,0.1);
-padding:8px;
-border-radius:8px;
-text-align:center;
-}
-
-/* SECTION */
-.section{display:none;}
-.active{display:block;}
-
-/* TOP BAR */
-.topbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
+/* CHAT */
+#messages{
+height:300px;
+overflow-y:auto;
+background:rgba(0,0,0,0.3);
+padding:10px;
+border-radius:10px;
 margin-bottom:10px;
 }
 
@@ -118,41 +102,38 @@ margin-bottom:10px;
 <!-- 🔐 LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
-    <h2>Giriş Yap</h2>
-
-    <input type="text" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Şifre">
-
+    <h2>Giriş</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Şifre">
     <button onclick="login()">Giriş</button>
-    <button onclick="register()">Kayıt Ol</button>
+    <button onclick="register()">Kayıt</button>
   </div>
 </div>
 
-<!-- 🌐 APP -->
+<!-- APP -->
 <div id="app" style="display:none;">
 
 <div class="container">
 
-<!-- TOP BAR -->
-<div class="topbar">
+<div style="display:flex;justify-content:space-between;align-items:center;">
   <div id="userInfo"></div>
   <button onclick="logout()">🚪 Çıkış</button>
 </div>
 
-<h1>🔐 Gizli Dil Sistemi PRO</h1>
+<h1>🔐 Gizli Dil + Chat PRO</h1>
 
 <nav>
 <button onclick="show('home')">Ana</button>
 <button onclick="show('translate')">Çeviri</button>
-<button onclick="show('alpha')">Alfabe</button>
+<button onclick="show('chat')">💬 Chat</button>
 <button onclick="toggleTheme()">🌗 Tema</button>
 </nav>
 
 <!-- HOME -->
 <div id="home" class="section active">
 <div class="card">
-<h2>Hoş Geldin 👋</h2>
-<p>Sistem aktif</p>
+<h2>Hoş Geldin</h2>
+<p>Sistem aktif 🚀</p>
 </div>
 </div>
 
@@ -164,16 +145,22 @@ margin-bottom:10px;
 </div>
 </div>
 
-<!-- ALPHABET -->
-<div id="alpha" class="section">
-<div class="card grid" id="alphabet"></div>
+<!-- CHAT -->
+<div id="chat" class="section">
+<div class="card">
+
+<div id="messages"></div>
+
+<input id="msgInput" placeholder="Mesaj yaz..." style="width:70%;padding:10px;">
+<button onclick="sendMessage()">Gönder</button>
+
+</div>
 </div>
 
 </div>
 </div>
 
 <script>
-/* UI */
 function show(id){
 document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
@@ -183,7 +170,7 @@ function toggleTheme(){
 document.body.classList.toggle("light");
 }
 
-/* MAP */
+/* TRANSLATE */
 const map={
 A:"u",E:"o",I:"a",İ:"e",O:"i",Ö:"ö",U:"ü",Ü:"ı",
 B:"d",C:"ş",Ç:"t",D:"k",F:"v",G:"b",Ğ:"",
@@ -191,23 +178,13 @@ H:"h",J:"y",K:"g",L:"r",M:"n",N:"m",
 P:"p",R:"l",S:"z",Ş:"s",T:"ç",V:"f",Y:"c",Z:"j"
 };
 
-/* TRANSLATE */
 document.getElementById("input").addEventListener("input",(e)=>{
 let t=e.target.value.toUpperCase().split("").map(c=>map[c]??c).join("");
 document.getElementById("output").innerText=t;
 });
-
-/* ALPHABET */
-const box=document.getElementById("alphabet");
-for(let k in map){
-let d=document.createElement("div");
-d.className="box";
-d.innerText=`${k} → ${map[k]}`;
-box.appendChild(d);
-}
 </script>
 
-<!-- 🔥 FIREBASE (FULL FIX) -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
@@ -217,6 +194,16 @@ signInWithEmailAndPassword,
 signOut,
 onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+query,
+orderBy,
+onSnapshot,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCA5gGIRMDs67LUZ1QrgS7GMNlxC44LsbE",
@@ -229,26 +216,21 @@ const firebaseConfig = {
 
 const appFirebase = initializeApp(firebaseConfig);
 const auth = getAuth(appFirebase);
+const db = getFirestore(appFirebase);
 
 const loginScreen = document.getElementById("loginScreen");
 const appDiv = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 
-/* REGISTER */
-window.register = function(){
-let email = document.getElementById("email").value;
-let pass = document.getElementById("password").value;
-
-createUserWithEmailAndPassword(auth,email,pass)
+/* LOGIN */
+window.login = function(){
+signInWithEmailAndPassword(auth,email.value,password.value)
 .catch(e=>alert(e.message));
 }
 
-/* LOGIN */
-window.login = function(){
-let email = document.getElementById("email").value;
-let pass = document.getElementById("password").value;
-
-signInWithEmailAndPassword(auth,email,pass)
+/* REGISTER */
+window.register = function(){
+createUserWithEmailAndPassword(auth,email.value,password.value)
 .catch(e=>alert(e.message));
 }
 
@@ -257,18 +239,52 @@ window.logout = function(){
 signOut(auth);
 }
 
-/* 🔥 FIX: GERÇEK KONTROL */
+/* AUTH */
 onAuthStateChanged(auth,(user)=>{
 if(user){
 loginScreen.style.display="none";
 appDiv.style.display="block";
 userInfo.innerText="👤 "+user.email;
+loadMessages();
 }else{
 loginScreen.style.display="flex";
 appDiv.style.display="none";
-userInfo.innerText="";
 }
 });
+
+/* CHAT SEND */
+window.sendMessage = async function(){
+const msg=document.getElementById("msgInput").value;
+if(!msg) return;
+
+await addDoc(collection(db,"messages"),{
+text:msg,
+user:auth.currentUser.email,
+time:serverTimestamp()
+});
+
+document.getElementById("msgInput").value="";
+}
+
+/* CHAT LOAD */
+function loadMessages(){
+const q=query(collection(db,"messages"),orderBy("time"));
+
+onSnapshot(q,(snap)=>{
+const box=document.getElementById("messages");
+box.innerHTML="";
+
+snap.forEach(doc=>{
+let d=doc.data();
+let div=document.createElement("div");
+div.innerHTML=`<b>${d.user}:</b> ${d.text}`;
+box.appendChild(div);
+});
+
+box.scrollTop=box.scrollHeight;
+});
+}
+
 </script>
 
 </body>
