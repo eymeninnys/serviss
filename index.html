@@ -2,32 +2,33 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>UNIVERSAL CHAT PRO</title>
+<title>NEON CHAT PRO</title>
 
 <style>
 body{
 margin:0;
 font-family:Arial;
-background:radial-gradient(circle,#1a0033,#000);
+background:radial-gradient(circle,#12002b,#000);
 color:white;
 }
 
 #login{
 position:fixed;inset:0;
-background:black;
 display:flex;
 justify-content:center;
 align-items:center;
+background:black;
 }
 
 .box{
-background:rgba(255,255,255,0.1);
+background:rgba(255,255,255,0.08);
 padding:20px;
 border-radius:15px;
 text-align:center;
+width:300px;
 }
 
-input{
+input,textarea{
 width:90%;
 padding:10px;
 margin:5px;
@@ -36,45 +37,54 @@ border:none;
 }
 
 button{
-width:90%;
 padding:10px;
 margin:5px;
 border:none;
 border-radius:10px;
-background:linear-gradient(45deg,#ff00cc,#3333ff);
+background:linear-gradient(45deg,#ff00cc,#00d4ff);
 color:white;
+cursor:pointer;
 }
 
-#app{
-display:none;
-max-width:900px;
-margin:auto;
-padding:20px;
+#app{display:none;padding:15px;}
+
+.container{
+display:grid;
+grid-template-columns:1fr 2fr 1fr;
+gap:10px;
 }
 
-#chat{
-height:400px;
-overflow:auto;
-background:rgba(0,0,0,0.3);
+.panel{
+background:rgba(255,255,255,0.05);
 padding:10px;
 border-radius:10px;
+height:80vh;
+overflow:auto;
 }
 
 .msg{
-margin:5px 0;
+background:rgba(0,0,0,0.3);
 padding:5px;
-background:rgba(255,255,255,0.1);
+margin:5px;
 border-radius:8px;
 }
 
+.online{color:#00ff88;}
+.offline{color:#ff5555;}
+
+#typing{
+font-size:12px;
+opacity:0.7;
+}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
 <div class="box">
-<h2>Giriş</h2>
+<h2>NEON CHAT</h2>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Şifre">
 <button onclick="login()">Giriş</button>
@@ -82,15 +92,35 @@ border-radius:8px;
 </div>
 </div>
 
+<!-- APP -->
 <div id="app">
 
-<h2>💬 UNIVERSAL CHAT</h2>
+<h2>⚡ NEON CHAT PRO</h2>
 <button onclick="logout()">Çıkış</button>
 
+<div class="container">
+
+<div class="panel">
+<h3>Kullanıcılar</h3>
+<div id="users"></div>
+</div>
+
+<div class="panel">
+<h3>Chat</h3>
 <div id="chat"></div>
 
-<input id="msg" placeholder="Mesaj yaz">
+<div id="typing"></div>
+
+<textarea id="msg"></textarea>
 <button onclick="send()">Gönder</button>
+</div>
+
+<div class="panel">
+<h3>Panel</h3>
+<div id="info"></div>
+</div>
+
+</div>
 
 </div>
 
@@ -100,14 +130,10 @@ border-radius:8px;
 
 <script>
 
-/* FIREBASE */
 const firebaseConfig = {
-  apiKey: "AIzaSyCA5gGIRMDs67LUZ1QRG7GMNlxC44LsbE",
-  authDomain: "servicess-59f58.firebaseapp.com",
-  projectId: "servicess-59f58",
-  storageBucket: "servicess-59f58.firebasestorage.app",
-  messagingSenderId: "898248019243",
-  appId: "1:898248019243:web:f57d0190e89df6b68ac96e"
+ apiKey:"AIzaSyCA5gGIRMDs67LUZ1QRG7GMNlxC44LsbE",
+ authDomain:"servicess-59f58.firebaseapp.com",
+ projectId:"servicess-59f58"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -115,7 +141,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* LOGIN */
+let currentUser=null;
+
+/* AUTH */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(e=>alert(e.message));
@@ -126,52 +154,109 @@ auth.createUserWithEmailAndPassword(email.value,password.value)
 .catch(e=>alert(e.message));
 }
 
-function logout(){
-auth.signOut();
+function logout(){auth.signOut();}
+
+/* REAL ONLINE SYSTEM */
+function setOnline(user){
+db.collection("status").doc(user.uid).set({
+email:user.email,
+last:Date.now()
+});
 }
+
+/* HEARTBEAT */
+setInterval(()=>{
+if(currentUser){
+setOnline(currentUser);
+}
+},5000);
 
 /* AUTH */
 auth.onAuthStateChanged(user=>{
 if(user){
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="block";
-loadChat();
+currentUser=user;
+login.style.display="none";
+app.style.display="block";
+setOnline(user);
+loadAll();
 }else{
-document.getElementById("login").style.display="flex";
-document.getElementById("app").style.display="none";
+login.style.display="flex";
+app.style.display="none";
 }
 });
 
 /* SEND */
 function send(){
-let msg=document.getElementById("msg").value;
-if(!msg) return;
+if(!msg.value) return;
 
 db.collection("messages").add({
-text:msg,
-user:auth.currentUser.email,
+text:msg.value,
+user:currentUser.email,
 time:Date.now()
 });
 
-document.getElementById("msg").value="";
+msg.value="";
 }
 
-/* LOAD */
+/* CHAT */
 function loadChat(){
 db.collection("messages")
 .orderBy("time")
 .onSnapshot(snap=>{
-let box=document.getElementById("chat");
-box.innerHTML="";
-
-snap.forEach(doc=>{
-let d=doc.data();
-box.innerHTML+=`
+chat.innerHTML="";
+snap.forEach(d=>{
+let x=d.data();
+chat.innerHTML+=`
 <div class="msg">
-<b>${d.user}</b><br>${d.text}
+<b>${x.user}</b><br>${x.text}
 </div>`;
 });
 });
+}
+
+/* USERS */
+function loadUsers(){
+db.collection("status")
+.onSnapshot(snap=>{
+users.innerHTML="";
+info.innerHTML="";
+
+snap.forEach(d=>{
+let u=d.data();
+let online=(Date.now()-u.last)<15000;
+
+users.innerHTML+=`
+<div class="${online?'online':'offline'}">
+${online?'🟢':'🔴'} ${u.email}
+</div>
+`;
+
+info.innerHTML+=`
+<div>${u.email} - ${online?'ONLINE':'OFFLINE'}</div>
+`;
+});
+});
+}
+
+/* TYPING SYSTEM (fake realtime) */
+msg.addEventListener("input",()=>{
+db.collection("typing").doc(currentUser.uid).set({
+email:currentUser.email,
+t:Date.now()
+});
+});
+
+db.collection("typing").onSnapshot(snap=>{
+typing.innerHTML="";
+snap.forEach(d=>{
+typing.innerHTML+=`${d.data().email} yazıyor...`;
+});
+});
+
+/* INIT */
+function loadAll(){
+loadChat();
+loadUsers();
 }
 
 </script>
