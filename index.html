@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Gizli Dil + Chat PRO+</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:radial-gradient(circle,#1a0033,#000);
+color:white;
+transition:0.3s;
+}
+
+body.light{
+background:#f5f5f5;
+color:black;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+padding:20px;
+}
+
+/* LOGIN */
+#loginScreen{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.95);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.login-box{
+background:rgba(255,255,255,0.1);
+padding:30px;
+border-radius:15px;
+text-align:center;
+backdrop-filter:blur(10px);
+}
+
+.login-box input{
+display:block;
+margin:10px auto;
+padding:10px;
+border:none;
+border-radius:8px;
+width:220px;
+}
+
+/* NAV */
+nav{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+justify-content:center;
+margin:20px 0;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:linear-gradient(45deg,#ff00cc,#3333ff);
+color:white;
+font-weight:bold;
+transition:0.2s;
+}
+
+button:hover{transform:scale(1.05);}
+
+/* SECTIONS */
+.section{display:none;}
+.active{display:block;}
+
+/* CARD */
+.card{
+background:rgba(255,255,255,0.08);
+padding:20px;
+border-radius:15px;
+margin-top:10px;
+}
+
+/* CHAT */
+#messages{
+height:350px;
+overflow-y:auto;
+background:rgba(0,0,0,0.3);
+padding:10px;
+border-radius:10px;
+margin-bottom:10px;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.msg{
+padding:8px 12px;
+border-radius:10px;
+max-width:70%;
+background:rgba(255,255,255,0.15);
+position:relative;
+}
+
+.msg.me{
+margin-left:auto;
+background:linear-gradient(45deg,#ff00cc,#3333ff);
+}
+
+.time{
+font-size:10px;
+opacity:0.7;
+display:block;
+margin-top:4px;
+}
+
+.delete{
+position:absolute;
+right:5px;
+top:2px;
+cursor:pointer;
+font-size:12px;
+opacity:0.6;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>Giriş</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Şifre">
+    <button onclick="login()">Giriş</button>
+    <button onclick="register()">Kayıt</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+<div class="container">
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+  <div id="userInfo"></div>
+  <button onclick="logout()">🚪 Çıkış</button>
+</div>
+
+<h1>🔐 Gizli Dil + Chat PRO+</h1>
+
+<nav>
+<button onclick="show('home')">Ana</button>
+<button onclick="show('translate')">Çeviri</button>
+<button onclick="show('chat')">💬 Chat</button>
+<button onclick="toggleTheme()">🌗 Tema</button>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="section active">
+<div class="card">
+<h2>Hoş Geldin</h2>
+<p>Sistem aktif 🚀</p>
+</div>
+</div>
+
+<!-- TRANSLATE -->
+<div id="translate" class="section">
+<div class="card">
+<textarea id="input" placeholder="Yaz..."></textarea>
+<div id="output"></div>
+</div>
+</div>
+
+<!-- CHAT -->
+<div id="chat" class="section">
+<div class="card">
+<div id="messages"></div>
+
+<input id="msgInput" placeholder="Mesaj yaz..." style="width:70%;padding:10px;">
+<button onclick="sendMessage()">Gönder</button>
+
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+function show(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+/* THEME SAVE */
+function toggleTheme(){
+document.body.classList.toggle("light");
+localStorage.setItem("theme",document.body.classList.contains("light"));
+}
+
+if(localStorage.getItem("theme")==="true"){
+document.body.classList.add("light");
+}
+
+/* TRANSLATE */
+const map={
+A:"u",E:"o",I:"a",İ:"e",O:"i",Ö:"ö",U:"ü",Ü:"ı",
+B:"d",C:"ş",Ç:"t",D:"k",F:"v",G:"b",Ğ:"",
+H:"h",J:"y",K:"g",L:"r",M:"n",N:"m",
+P:"p",R:"l",S:"z",Ş:"s",T:"ç",V:"f",Y:"c",Z:"j"
+};
+
+document.getElementById("input").addEventListener("input",(e)=>{
+let t=e.target.value.toUpperCase().split("").map(c=>map[c]??c).join("");
+document.getElementById("output").innerText=t;
+});
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signOut,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+query,
+orderBy,
+onSnapshot,
+serverTimestamp,
+deleteDoc,
+doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCA5gGIRMDs67LUZ1QRG7S7GMNlxC44LsbE",
+authDomain: "servicess-59f58.firebaseapp.com",
+projectId: "servicess-59f58",
+storageBucket: "servicess-59f58.firebasestorage.app",
+messagingSenderId: "898248019243",
+appId: "1:898248019243:web:f57d0190e89df6b68ac96e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginScreen = document.getElementById("loginScreen");
+const appDiv = document.getElementById("app");
+const userInfo = document.getElementById("userInfo");
+
+window.login = () =>
+signInWithEmailAndPassword(auth,email.value,password.value).catch(e=>alert(e.message));
+
+window.register = () =>
+createUserWithEmailAndPassword(auth,email.value,password.value).catch(e=>alert(e.message));
+
+window.logout = () => signOut(auth);
+
+/* ENTER TO SEND */
+document.getElementById("msgInput").addEventListener("keydown",(e)=>{
+if(e.key==="Enter") sendMessage();
+});
+
+onAuthStateChanged(auth,(user)=>{
+if(user){
+loginScreen.style.display="none";
+appDiv.style.display="block";
+userInfo.innerText="👤 "+user.email;
+loadMessages();
+}else{
+loginScreen.style.display="flex";
+appDiv.style.display="none";
+}
+});
+
+/* SEND */
+window.sendMessage = async function(){
+const msg=document.getElementById("msgInput");
+if(!msg.value.trim()) return;
+
+await addDoc(collection(db,"messages"),{
+text:msg.value,
+user:auth.currentUser.email,
+time:serverTimestamp()
+});
+
+msg.value="";
+}
+
+/* LOAD */
+function loadMessages(){
+const q=query(collection(db,"messages"),orderBy("time"));
+
+onSnapshot(q,(snap)=>{
+const box=document.getElementById("messages");
+box.innerHTML="";
+
+snap.forEach(docSnap=>{
+let d=docSnap.data();
+
+let div=document.createElement("div");
+div.className="msg " + (d.user===auth.currentUser.email ? "me":"");
+
+let time = d.time?.seconds
+? new Date(d.time.seconds*1000).toLocaleString()
+: "";
+
+div.innerHTML=`
+${d.user}: ${d.text}
+<span class="time">${time}</span>
+${d.user===auth.currentUser.email ? `<span class="delete" onclick="delMsg('${docSnap.id}')">❌</span>`:""}
+`;
+
+box.appendChild(div);
+});
+
+box.scrollTop=box.scrollHeight;
+});
+}
+
+window.delMsg = async function(id){
+await deleteDoc(doc(db,"messages",id));
+}
+</script>
+
+</body>
+</html>
