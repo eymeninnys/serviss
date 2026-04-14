@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Gizli Dil + Chat PRO</title>
+<title>Gizli Sistem CHAT PRO</title>
 
 <style>
 body{
@@ -12,22 +12,16 @@ background:radial-gradient(circle,#1a0033,#000);
 color:white;
 }
 
-body.light{
-background:#f5f5f5;
-color:black;
-}
-
 .container{
-max-width:1000px;
+max-width:1100px;
 margin:auto;
 padding:20px;
 }
 
-/* LOGIN */
 #loginScreen{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.95);
+background:black;
 display:flex;
 justify-content:center;
 align-items:center;
@@ -36,62 +30,53 @@ z-index:9999;
 
 .login-box{
 background:rgba(255,255,255,0.1);
-padding:30px;
+padding:25px;
 border-radius:15px;
 text-align:center;
-backdrop-filter:blur(10px);
 }
 
-.login-box input{
-display:block;
-margin:10px auto;
+input,textarea{
 padding:10px;
-border:none;
+margin:5px;
 border-radius:8px;
-width:200px;
-}
-
-/* NAV */
-nav{
-display:flex;
-flex-wrap:wrap;
-gap:10px;
-justify-content:center;
-margin:20px 0;
+border:none;
+width:90%;
 }
 
 button{
-padding:10px 15px;
+padding:10px;
 border:none;
 border-radius:10px;
-cursor:pointer;
 background:linear-gradient(45deg,#ff00cc,#3333ff);
 color:white;
-font-weight:bold;
+cursor:pointer;
+margin:3px;
 }
 
-button:hover{transform:scale(1.05);}
+.main{
+display:grid;
+grid-template-columns:1fr 2fr;
+gap:10px;
+}
 
-/* SECTIONS */
-.section{display:none;}
-.active{display:block;}
-
-/* CARD */
-.card{
+.panel{
 background:rgba(255,255,255,0.08);
-padding:20px;
-border-radius:15px;
-margin-top:10px;
-}
-
-/* CHAT */
-#messages{
-height:300px;
-overflow-y:auto;
-background:rgba(0,0,0,0.3);
 padding:10px;
 border-radius:10px;
-margin-bottom:10px;
+height:80vh;
+overflow:auto;
+}
+
+.msg{
+background:rgba(0,0,0,0.3);
+padding:5px;
+margin:5px;
+border-radius:8px;
+}
+
+.small{
+font-size:12px;
+opacity:0.7;
 }
 
 </style>
@@ -99,95 +84,58 @@ margin-bottom:10px;
 
 <body>
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="loginScreen">
-  <div class="login-box">
-    <h2>Giriş</h2>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Şifre">
-    <button onclick="login()">Giriş</button>
-    <button onclick="register()">Kayıt</button>
-  </div>
+<div class="login-box">
+<h2>Giriş</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Şifre">
+<button onclick="login()">Giriş</button>
+<button onclick="register()">Kayıt</button>
+</div>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;">
-
 <div class="container">
 
-<div style="display:flex;justify-content:space-between;align-items:center;">
-  <div id="userInfo"></div>
-  <button onclick="logout()">🚪 Çıkış</button>
+<h2>💬 MINI DISCORD SYSTEM</h2>
+
+<button onclick="logout()">Çıkış</button>
+
+<div class="main">
+
+<!-- USER PANEL -->
+<div class="panel">
+<h3>Kullanıcılar</h3>
+<div id="users"></div>
 </div>
 
-<h1>🔐 Gizli Dil + Chat PRO</h1>
-
-<nav>
-<button onclick="show('home')">Ana</button>
-<button onclick="show('translate')">Çeviri</button>
-<button onclick="show('chat')">💬 Chat</button>
-<button onclick="toggleTheme()">🌗 Tema</button>
-</nav>
-
-<!-- HOME -->
-<div id="home" class="section active">
-<div class="card">
-<h2>Hoş Geldin</h2>
-<p>Sistem aktif 🚀</p>
-</div>
-</div>
-
-<!-- TRANSLATE -->
-<div id="translate" class="section">
-<div class="card">
-<textarea id="input" placeholder="Yaz..."></textarea>
-<div id="output"></div>
-</div>
-</div>
-
-<!-- CHAT -->
-<div id="chat" class="section">
-<div class="card">
-
+<!-- CHAT PANEL -->
+<div class="panel">
+<h3>Genel Chat</h3>
 <div id="messages"></div>
 
-<input id="msgInput" placeholder="Mesaj yaz..." style="width:70%;padding:10px;">
+<textarea id="msgInput" placeholder="Mesaj yaz"></textarea>
 <button onclick="sendMessage()">Gönder</button>
 
+<h3>DM</h3>
+<input id="dmUser" placeholder="Kime (email)">
+<textarea id="dmText"></textarea>
+<button onclick="sendDM()">DM Gönder</button>
+
+<div id="dmBox"></div>
+</div>
+
+</div>
+
 </div>
 </div>
 
-</div>
-</div>
-
-<script>
-function show(id){
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-}
-
-function toggleTheme(){
-document.body.classList.toggle("light");
-}
-
-/* TRANSLATE */
-const map={
-A:"u",E:"o",I:"a",İ:"e",O:"i",Ö:"ö",U:"ü",Ü:"ı",
-B:"d",C:"ş",Ç:"t",D:"k",F:"v",G:"b",Ğ:"",
-H:"h",J:"y",K:"g",L:"r",M:"n",N:"m",
-P:"p",R:"l",S:"z",Ş:"s",T:"ç",V:"f",Y:"c",Z:"j"
-};
-
-document.getElementById("input").addEventListener("input",(e)=>{
-let t=e.target.value.toUpperCase().split("").map(c=>map[c]??c).join("");
-document.getElementById("output").innerText=t;
-});
-</script>
-
-<!-- FIREBASE -->
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { 
+import {
 getAuth,
 createUserWithEmailAndPassword,
 signInWithEmailAndPassword,
@@ -202,7 +150,9 @@ addDoc,
 query,
 orderBy,
 onSnapshot,
-serverTimestamp
+serverTimestamp,
+deleteDoc,
+doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -220,69 +170,84 @@ const db = getFirestore(appFirebase);
 
 const loginScreen = document.getElementById("loginScreen");
 const appDiv = document.getElementById("app");
-const userInfo = document.getElementById("userInfo");
+
+let currentUser=null;
 
 /* LOGIN */
-window.login = function(){
-signInWithEmailAndPassword(auth,email.value,password.value)
-.catch(e=>alert(e.message));
-}
-
-/* REGISTER */
-window.register = function(){
-createUserWithEmailAndPassword(auth,email.value,password.value)
-.catch(e=>alert(e.message));
-}
-
-/* LOGOUT */
-window.logout = function(){
-signOut(auth);
-}
+window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
+window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
+window.logout=()=>signOut(auth);
 
 /* AUTH */
 onAuthStateChanged(auth,(user)=>{
 if(user){
+currentUser=user;
 loginScreen.style.display="none";
 appDiv.style.display="block";
-userInfo.innerText="👤 "+user.email;
-loadMessages();
+loadAll();
 }else{
 loginScreen.style.display="flex";
 appDiv.style.display="none";
 }
 });
 
-/* CHAT SEND */
-window.sendMessage = async function(){
-const msg=document.getElementById("msgInput").value;
-if(!msg) return;
-
+/* SEND MSG */
+window.sendMessage=async()=>{
 await addDoc(collection(db,"messages"),{
-text:msg,
-user:auth.currentUser.email,
+text:msgInput.value,
+user:currentUser.email,
 time:serverTimestamp()
 });
-
-document.getElementById("msgInput").value="";
+msgInput.value="";
 }
 
-/* CHAT LOAD */
-function loadMessages(){
+/* LOAD CHAT */
+function loadChat(){
 const q=query(collection(db,"messages"),orderBy("time"));
 
 onSnapshot(q,(snap)=>{
-const box=document.getElementById("messages");
-box.innerHTML="";
+messages.innerHTML="";
+snap.forEach(d=>{
+let data=d.data();
 
-snap.forEach(doc=>{
-let d=doc.data();
 let div=document.createElement("div");
-div.innerHTML=`<b>${d.user}:</b> ${d.text}`;
-box.appendChild(div);
-});
+div.className="msg";
+div.innerHTML=`
+<b>${data.user}</b><br>
+${data.text}<br>
+<button onclick="deleteMsg('${d.id}','${data.user}')">Sil</button>
+`;
 
-box.scrollTop=box.scrollHeight;
+messages.appendChild(div);
 });
+});
+}
+
+/* DELETE MSG */
+window.deleteMsg=async(id,user)=>{
+if(user!==currentUser.email) return;
+await deleteDoc(doc(db,"messages",id));
+}
+
+/* USERS (fake online) */
+function loadUsers(){
+const q=query(collection(db,"messages"),orderBy("time"));
+
+onSnapshot(q,(snap)=>{
+let set=new Set();
+snap.forEach(d=>set.add(d.data().user));
+
+users.innerHTML="";
+set.forEach(u=>{
+users.innerHTML+=`<div>🟢 ${u}</div>`;
+});
+});
+}
+
+/* INIT */
+function loadAll(){
+loadChat();
+loadUsers();
 }
 
 </script>
