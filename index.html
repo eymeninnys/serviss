@@ -10,7 +10,7 @@ margin:0;
 font-family:Arial;
 background:radial-gradient(circle,#1a0033,#000);
 color:white;
-transition:0.5s;
+transition:0.4s;
 }
 
 body.light{
@@ -24,11 +24,11 @@ margin:auto;
 padding:20px;
 }
 
-/* LOGIN */
+/* 🔐 LOGIN */
 #loginScreen{
 position:fixed;
-width:100%;height:100%;
-background:black;
+inset:0;
+background:rgba(0,0,0,0.95);
 display:flex;
 justify-content:center;
 align-items:center;
@@ -39,8 +39,8 @@ z-index:9999;
 background:rgba(255,255,255,0.1);
 padding:30px;
 border-radius:15px;
-backdrop-filter:blur(10px);
 text-align:center;
+backdrop-filter:blur(10px);
 }
 
 .login-box input{
@@ -49,14 +49,15 @@ margin:10px auto;
 padding:10px;
 border-radius:8px;
 border:none;
+width:200px;
 }
 
 /* NAV */
 nav{
 display:flex;
-justify-content:center;
 flex-wrap:wrap;
 gap:10px;
+justify-content:center;
 margin:20px 0;
 }
 
@@ -64,13 +65,15 @@ button{
 padding:10px 15px;
 border:none;
 border-radius:10px;
+cursor:pointer;
 background:linear-gradient(45deg,#ff00cc,#3333ff);
 color:white;
-cursor:pointer;
+font-weight:bold;
+transition:0.2s;
 }
 
 button:hover{
-transform:scale(1.1);
+transform:scale(1.08);
 }
 
 /* CARD */
@@ -81,7 +84,7 @@ border-radius:15px;
 margin-top:10px;
 }
 
-/* GRID FIX */
+/* GRID */
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(80px,1fr));
@@ -95,16 +98,16 @@ border-radius:8px;
 text-align:center;
 }
 
-/* SECTIONS */
+/* SECTION */
 .section{display:none;}
 .active{display:block;}
 
+/* TOP BAR */
 .topbar{
 display:flex;
 justify-content:space-between;
 align-items:center;
 margin-bottom:10px;
-font-size:14px;
 }
 
 </style>
@@ -112,24 +115,28 @@ font-size:14px;
 
 <body>
 
-<!-- LOGIN -->
+<!-- 🔐 LOGIN -->
 <div id="loginScreen">
-<div class="login-box">
-<h2>Giriş</h2>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Şifre">
-<button onclick="login()">Giriş</button>
-<button onclick="register()">Kayıt</button>
-</div>
+  <div class="login-box">
+    <h2>Giriş Yap</h2>
+
+    <input type="text" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Şifre">
+
+    <button onclick="login()">Giriş</button>
+    <button onclick="register()">Kayıt Ol</button>
+  </div>
 </div>
 
+<!-- 🌐 APP -->
 <div id="app" style="display:none;">
 
 <div class="container">
 
+<!-- TOP BAR -->
 <div class="topbar">
-<span id="userEmail"></span>
-<button onclick="logout()">🚪 Çıkış</button>
+  <div id="userInfo"></div>
+  <button onclick="logout()">🚪 Çıkış</button>
 </div>
 
 <h1>🔐 Gizli Dil Sistemi PRO</h1>
@@ -141,13 +148,15 @@ font-size:14px;
 <button onclick="toggleTheme()">🌗 Tema</button>
 </nav>
 
+<!-- HOME -->
 <div id="home" class="section active">
 <div class="card">
-<h2>Hoş Geldin</h2>
-<p>Gelişmiş sistem aktif 🚀</p>
+<h2>Hoş Geldin 👋</h2>
+<p>Sistem aktif</p>
 </div>
 </div>
 
+<!-- TRANSLATE -->
 <div id="translate" class="section">
 <div class="card">
 <textarea id="input" placeholder="Yaz..."></textarea>
@@ -155,16 +164,16 @@ font-size:14px;
 </div>
 </div>
 
+<!-- ALPHABET -->
 <div id="alpha" class="section">
 <div class="card grid" id="alphabet"></div>
-</div>
 </div>
 
 </div>
 </div>
 
 <script>
-// UI
+/* UI */
 function show(id){
 document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
@@ -174,7 +183,7 @@ function toggleTheme(){
 document.body.classList.toggle("light");
 }
 
-// MAP
+/* MAP */
 const map={
 A:"u",E:"o",I:"a",İ:"e",O:"i",Ö:"ö",U:"ü",Ü:"ı",
 B:"d",C:"ş",Ç:"t",D:"k",F:"v",G:"b",Ğ:"",
@@ -182,20 +191,13 @@ H:"h",J:"y",K:"g",L:"r",M:"n",N:"m",
 P:"p",R:"l",S:"z",Ş:"s",T:"ç",V:"f",Y:"c",Z:"j"
 };
 
-// TRANSLATE + SAVE
+/* TRANSLATE */
 document.getElementById("input").addEventListener("input",(e)=>{
 let t=e.target.value.toUpperCase().split("").map(c=>map[c]??c).join("");
 document.getElementById("output").innerText=t;
-localStorage.setItem("text",e.target.value);
 });
 
-// LOAD
-window.onload=()=>{
-let t=localStorage.getItem("text");
-if(t) document.getElementById("input").value=t;
-};
-
-// ALPHABET
+/* ALPHABET */
 const box=document.getElementById("alphabet");
 for(let k in map){
 let d=document.createElement("div");
@@ -205,11 +207,16 @@ box.appendChild(d);
 }
 </script>
 
-<!-- FIREBASE -->
+<!-- 🔥 FIREBASE (FULL FIX) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signOut,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCA5gGIRMDs67LUZ1QrgS7GMNlxC44LsbE",
@@ -220,30 +227,46 @@ const firebaseConfig = {
   appId: "1:898248019243:web:f57d0190e89df6b68ac96e"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const appFirebase = initializeApp(firebaseConfig);
+const auth = getAuth(appFirebase);
 
-window.register = ( )=>{
-let e=email.value;
-let p=password.value;
-createUserWithEmailAndPassword(auth,e,p).catch(x=>alert(x.message));
+const loginScreen = document.getElementById("loginScreen");
+const appDiv = document.getElementById("app");
+const userInfo = document.getElementById("userInfo");
+
+/* REGISTER */
+window.register = function(){
+let email = document.getElementById("email").value;
+let pass = document.getElementById("password").value;
+
+createUserWithEmailAndPassword(auth,email,pass)
+.catch(e=>alert(e.message));
 }
 
-window.login = ()=>{
-signInWithEmailAndPassword(auth,email.value,password.value)
-.catch(x=>alert(x.message));
+/* LOGIN */
+window.login = function(){
+let email = document.getElementById("email").value;
+let pass = document.getElementById("password").value;
+
+signInWithEmailAndPassword(auth,email,pass)
+.catch(e=>alert(e.message));
 }
 
-window.logout = ()=>signOut(auth);
+/* LOGOUT */
+window.logout = function(){
+signOut(auth);
+}
 
+/* 🔥 FIX: GERÇEK KONTROL */
 onAuthStateChanged(auth,(user)=>{
 if(user){
 loginScreen.style.display="none";
-app.style.display="block";
-userEmail.innerText="👤 "+user.email;
+appDiv.style.display="block";
+userInfo.innerText="👤 "+user.email;
 }else{
 loginScreen.style.display="flex";
-app.style.display="none";
+appDiv.style.display="none";
+userInfo.innerText="";
 }
 });
 </script>
